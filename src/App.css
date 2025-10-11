@@ -1,0 +1,21 @@
+.App {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.cart {
+  position: relative;
+}
+
+.cart-count {
+  font-weight: bold;
+  margin-left: 6px;
+}
