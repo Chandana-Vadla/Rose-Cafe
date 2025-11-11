@@ -1,4 +1,6 @@
 import React, {useState, useEffect, useContext} from 'react'
+import Cookies from 'js-cookie'
+
 import Header from '../Header'
 import CartContext from '../../context/CartContext'
 import './index.css'
@@ -14,9 +16,10 @@ const RestaurantMenu = () => {
   const [dishQuantities, setDishQuantities] = useState({})
   const {addCartItem} = useContext(CartContext)
 
-  // ✅ Fetch dishes list from API
+  // Fetch dishes list from API
   useEffect(() => {
     const fetchData = async () => {
+      const token = Cookies.get('jwt_token')
       try {
         const response = await fetch(dishesApiUrl)
         if (!response.ok) {
