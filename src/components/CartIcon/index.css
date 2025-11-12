@@ -1,12 +1,10 @@
-import styled from 'styled-components'
-
-export const CartContainer = styled.div`
+.cartContainer {
   position: relative;
   display: inline-block;
   cursor: pointer;
-`
+}
 
-export const Badge = styled.span`
+.badge {
   position: absolute;
   top: -6px;
   right: -8px;
@@ -17,4 +15,4 @@ export const Badge = styled.span`
   font-size: 12px;
   font-weight: bold;
   line-height: 1;
-`
+}

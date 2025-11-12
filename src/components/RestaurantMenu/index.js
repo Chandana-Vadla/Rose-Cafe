@@ -5,7 +5,6 @@ import Header from '../Header'
 import CartContext from '../../context/CartContext'
 import './index.css'
 
-// ✅ Correct variable name and API for tests
 const dishesApiUrl = 'https://apis.ccbp.in/restaurants-list-details'
 
 const RestaurantMenu = () => {
@@ -20,8 +19,15 @@ const RestaurantMenu = () => {
   useEffect(() => {
     const fetchData = async () => {
       const token = Cookies.get('jwt_token')
+      const options = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }
       try {
-        const response = await fetch(dishesApiUrl)
+        const response = await fetch(dishesApiUrl, options)
         if (!response.ok) {
           throw new Error('Failed to fetch dishes')
         }
