@@ -5,7 +5,8 @@ import Header from '../Header'
 import CartContext from '../../context/CartContext'
 import './index.css'
 
-const dishesApiUrl = 'https://apis.ccbp.in/restaurants-list-details'
+const dishesApiUrl =
+  'https://apis2.ccbp.in/restaurant-app/restaurant-menu-list-details'
 
 const RestaurantMenu = () => {
   const [restaurantName, setRestaurantName] = useState('')
