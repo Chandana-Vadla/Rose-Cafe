@@ -5,46 +5,90 @@ const CartContext = createContext()
 export const CartProvider = ({children}) => {
   const [cartList, setCartList] = useState([])
 
+  // normalize ID so tests do not break
+  const getDishId = item =>
+    item.dish_id || item.dishId || item.id || String(item.dish_id)
+
+  // ===========================
+  //   ADD ITEM TO CART
+  // ===========================
   const addCartItem = item => {
-    setCartList(prevList => {
-      const existing = prevList.find(i => i.dish_id === item.dish_id)
-      if (existing) {
-        return prevList.map(i =>
-          i.dish_id === item.dish_id ? {...i, quantity: i.quantity + 1} : i,
-        )
-      }
-      return [...prevList, {...item, quantity: 1}]
-    })
+    const id = getDishId(item)
+
+    const existing = cartList.find(each => getDishId(each) === id)
+
+    if (existing) {
+      // item already exists — increase quantity but DO NOT add new entry
+      const updated = cartList.map(each => {
+        if (getDishId(each) === id) {
+          return {...each, quantity: each.quantity + item.quantity}
+        }
+        return each
+      })
+
+      setCartList(updated)
+    } else {
+      // new item — push to array
+      setCartList(prev => [...prev, {...item}])
+    }
   }
 
-  const removeCartItem = id =>
-    setCartList(prevList => prevList.filter(i => i.dish_id !== id))
+  // ===========================
+  // REMOVE ALL
+  // ===========================
+  const removeAllCartItems = () => {
+    setCartList([])
+  }
 
-  const incrementCartItemQuantity = id =>
-    setCartList(prevList =>
-      prevList.map(i =>
-        i.dish_id === id ? {...i, quantity: i.quantity + 1} : i,
-      ),
+  // ===========================
+  // REMOVE ONE ITEM
+  // ===========================
+  const removeCartItem = id => {
+    setCartList(prev => prev.filter(each => getDishId(each) !== id))
+  }
+
+  // ===========================
+  // INCREMENT QUANTITY
+  // ===========================
+  const incrementCartItemQuantity = id => {
+    setCartList(prev =>
+      prev.map(each => {
+        if (getDishId(each) === id) {
+          return {...each, quantity: each.quantity + 1}
+        }
+        return each
+      }),
     )
+  }
 
-  const decrementCartItemQuantity = id =>
-    setCartList(prevList =>
-      prevList
-        .map(i => (i.dish_id === id ? {...i, quantity: i.quantity - 1} : i))
-        .filter(i => i.quantity > 0),
+  // ===========================
+  // DECREMENT QUANTITY
+  // ===========================
+  const decrementCartItemQuantity = id => {
+    setCartList(prev =>
+      prev
+        .map(each => {
+          if (getDishId(each) === id) {
+            if (each.quantity === 1) {
+              return null // remove item
+            }
+            return {...each, quantity: each.quantity - 1}
+          }
+          return each
+        })
+        .filter(Boolean),
     )
-
-  const removeAllCartItems = () => setCartList([])
+  }
 
   return (
     <CartContext.Provider
       value={{
         cartList,
         addCartItem,
+        removeAllCartItems,
         removeCartItem,
         incrementCartItemQuantity,
         decrementCartItemQuantity,
-        removeAllCartItems,
       }}
     >
       {children}

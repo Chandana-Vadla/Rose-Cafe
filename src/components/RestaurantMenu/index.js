@@ -1,6 +1,4 @@
 import React, {useState, useEffect, useContext} from 'react'
-import Cookies from 'js-cookie'
-
 import Header from '../Header'
 import CartContext from '../../context/CartContext'
 import './index.css'
@@ -14,175 +12,162 @@ const RestaurantMenu = () => {
   const [activeCategory, setActiveCategory] = useState('')
   const [dishes, setDishes] = useState([])
   const [dishQuantities, setDishQuantities] = useState({})
+
   const {addCartItem} = useContext(CartContext)
 
-  // Fetch dishes list from API
   useEffect(() => {
-    const fetchData = async () => {
-      const token = Cookies.get('jwt_token')
-      const options = {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      }
+    const fetchMenuData = async () => {
       try {
-        const response = await fetch(dishesApiUrl, options)
-        if (!response.ok) {
-          throw new Error('Failed to fetch dishes')
-        }
+        const response = await fetch(dishesApiUrl)
         const data = await response.json()
+
         const details = Array.isArray(data) ? data[0] : data
 
-        // Set restaurant name and menu categories
         setRestaurantName(details.restaurant_name)
-        const list = details.table_menu_list || []
-        setMenuCategories(list)
 
-        if (list.length > 0) {
-          setActiveCategory(list[0].menu_category)
-          setDishes(list[0].category_dishes || [])
+        const categories = details.table_menu_list
+        setMenuCategories(categories)
+
+        if (categories.length > 0) {
+          setActiveCategory(categories[0].menu_category)
+          setDishes(categories[0].category_dishes)
         }
-      } catch (error) {
-        console.error('Error fetching dishes:', error)
+      } catch (err) {
+        console.log('Fetch error:', err)
       }
     }
 
-    fetchData()
+    fetchMenuData()
   }, [])
 
-  // ✅ Handle switching categories dynamically
-  const handleCategoryClick = category => {
+  const changeCategory = category => {
     setActiveCategory(category)
-    const selected = menuCategories.find(
-      each => each.menu_category === category,
-    )
-    setDishes(selected?.category_dishes || [])
+    const matched = menuCategories.find(each => each.menu_category === category)
+    setDishes(matched ? matched.category_dishes : [])
     setDishQuantities({})
   }
 
-  // ✅ Quantity controls
-  const incrementQuantity = dishId => {
+  // quantity handling
+  const increaseQty = id => {
     setDishQuantities(prev => ({
       ...prev,
-      [dishId]: (prev[dishId] || 0) + 1,
+      [id]: (prev[id] || 0) + 1,
     }))
   }
 
-  const decrementQuantity = dishId => {
+  const decreaseQty = id => {
     setDishQuantities(prev => {
-      const currentQty = prev[dishId] || 0
-      if (currentQty === 0) return prev
-      const updated = {...prev}
-      if (currentQty - 1 === 0) {
-        delete updated[dishId]
-      } else {
-        updated[dishId] = currentQty - 1
+      if (!prev[id]) return prev // do NOT decrement when 0
+      if (prev[id] === 1) {
+        const updated = {...prev}
+        delete updated[id]
+        return updated
       }
-      return updated
+      return {...prev, [id]: prev[id] - 1}
     })
   }
 
-  // ✅ Add item to cart context
-  const onAddToCart = dish => {
+  // add to cart
+  const addDishToCart = dish => {
+    const qty = dishQuantities[dish.dish_id] || 1
+
     const item = {
       dish_id: dish.dish_id,
       dish_name: dish.dish_name,
       dish_price: dish.dish_price,
       dish_currency: dish.dish_currency,
       dish_image: dish.dish_image,
-      quantity: dishQuantities[dish.dish_id] || 1,
+      quantity: qty,
     }
+
     addCartItem(item)
   }
 
   return (
     <>
       <Header />
+
       <div className="menu-container">
-        {/* ✅ Restaurant header info */}
         <h1 className="restaurant-name">{restaurantName}</h1>
         <p className="orders-text">My Orders</p>
 
-        {/* ✅ Dynamic category tabs */}
+        {/* CATEGORY TABS */}
         <div className="tabs-container">
           {menuCategories.map(each => (
             <button
               key={each.menu_category}
-              type="button"
-              className={`tab-button ${
-                activeCategory === each.menu_category ? 'active' : ''
+              className={`menu-category-item ${
+                activeCategory === each.menu_category ? 'active-category' : ''
               }`}
-              onClick={() => handleCategoryClick(each.menu_category)}
+              type="button"
+              onClick={() => changeCategory(each.menu_category)}
             >
               {each.menu_category}
             </button>
           ))}
         </div>
 
-        {/* ✅ Dish list */}
+        {/* DISH LIST */}
         <ul className="dishes-container">
           {dishes.map(dish => {
-            const quantity = dishQuantities[dish.dish_id] || 0
-            const available =
-              dish.dish_Availability === 'true' ||
-              dish.dish_Availability === true
-            const hasCustomizations = dish.addonCat && dish.addonCat.length > 0
+            const qty = dishQuantities[dish.dish_id] || 0
+
+            const available = dish.dish_Availability === true
 
             return (
               <li key={dish.dish_id} className="dish-item">
                 <div className="dish-info">
-                  <h3 className="dish-name">{dish.dish_name}</h3>
+                  <h1 className="dish-name">{dish.dish_name}</h1>
+
                   <p className="dish-price">
                     {dish.dish_currency} {dish.dish_price}
                   </p>
+
                   <p className="dish-description">{dish.dish_description}</p>
+
                   <p className="dish-calories">{dish.dish_calories} Calories</p>
 
-                  {/* ✅ Customization message */}
-                  {hasCustomizations && (
+                  {dish.addonCat && dish.addonCat.length > 0 && (
                     <p className="customizations-text">
                       Customizations available
                     </p>
                   )}
 
-                  {/* ✅ Availability message */}
                   {!available && <p className="not-available">Not available</p>}
                 </div>
 
-                {/* ✅ Dish image */}
                 <img
                   src={dish.dish_image}
                   alt={dish.dish_name}
                   className="dish-image"
                 />
 
-                {/* ✅ Quantity and Add to Cart section */}
+                {/* quantity */}
                 {available && (
                   <div className="quantity-container">
                     <button
-                      type="button"
                       className="quantity-btn"
-                      onClick={() => decrementQuantity(dish.dish_id)}
+                      type="button"
+                      onClick={() => decreaseQty(dish.dish_id)}
                     >
                       -
                     </button>
-                    <p className="quantity-value">{quantity}</p>
+
+                    <p className="quantity-value">{qty}</p>
+
                     <button
-                      type="button"
                       className="quantity-btn"
-                      onClick={() => incrementQuantity(dish.dish_id)}
+                      type="button"
+                      onClick={() => increaseQty(dish.dish_id)}
                     >
                       +
                     </button>
 
-                    {/* ✅ Show Add to Cart only when quantity > 0 */}
-                    {quantity > 0 && (
+                    {qty > 0 && (
                       <button
                         type="button"
                         className="add-to-cart-btn"
-                        onClick={() => onAddToCart(dish)}
+                        onClick={() => addDishToCart(dish)}
                       >
                         ADD TO CART
                       </button>

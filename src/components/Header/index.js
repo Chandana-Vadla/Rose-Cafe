@@ -1,36 +1,38 @@
-import React, {useContext} from 'react'
-import {Link, useHistory} from 'react-router-dom'
+import {useContext} from 'react'
+import {Link, withRouter} from 'react-router-dom'
 import Cookies from 'js-cookie'
-import {FaShoppingCart} from 'react-icons/fa'
 import CartContext from '../../context/CartContext'
 import './index.css'
 
-const Header = () => {
+const Header = props => {
   const {cartList} = useContext(CartContext)
-  const history = useHistory()
+  const cartCount = cartList.length
 
   const onClickLogout = () => {
     Cookies.remove('jwt_token')
+    const {history} = props
     history.replace('/login')
   }
 
   return (
-    <div className="headerContainer">
-      <Link className="heading-link" to="/">
-        <h1 className="cafeName">UNI Resto Cafe</h1>
+    <nav className="header">
+      <Link to="/" className="header-title">
+        UNI Resto Cafe
       </Link>
 
-      <div>
-        <Link to="/cart" data-testid="cart">
-          <FaShoppingCart size={22} />
-          <span> {cartList.length}</span>
+      <div className="header-right">
+        <Link to="/cart">
+          <button type="button" data-testid="cart" className="cart-btn">
+            🛒<span className="cart-count">{cartCount}</span>
+          </button>
         </Link>
+
+        <button type="button" className="logout-btn" onClick={onClickLogout}>
+          Logout
+        </button>
       </div>
-      <button className="logoutButton" onClick={onClickLogout}>
-        Logout
-      </button>
-    </div>
+    </nav>
   )
 }
 
-export default Header
+export default withRouter(Header)
