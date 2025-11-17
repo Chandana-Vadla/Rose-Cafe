@@ -17,7 +17,7 @@ const Header = props => {
   return (
     <nav className="header">
       <Link to="/" className="header-title">
-        UNI Resto Cafe
+        Tasty Kitchens
       </Link>
 
       <div className="header-right">
